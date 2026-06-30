@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First Trainer 2 — Listening (Test 2)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --teal:#1a7d78;--teal-dark:#145f5b;--teal-light:#e8f4f3;
+    --grey-bg:#f5f5f3;--grey-border:#d8d8d5;--grey-text:#555;
+    --black:#1a1a1a;--white:#fff;--red:#c0392b;--green:#1e7e44;--amber:#e67e22;
+    --topbar-h:56px;--partbar-h:44px;--bottombar-h:52px;
+  }
+  html,body{height:100%;overflow:hidden;}
+  body{font-family:'DM Sans',sans-serif;background:var(--grey-bg);color:var(--black);display:flex;flex-direction:column;}
+  #topbar{background:var(--white);border-bottom:2px solid var(--grey-border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:var(--topbar-h);flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+  .brand-text{font-size:15px;font-weight:600;line-height:1.2;}
+  .brand-text span{display:block;font-weight:300;color:var(--grey-text);font-size:11px;}
+  .notes-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--grey-border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;transition:all .15s;}
+  .notes-btn:hover{border-color:var(--teal);color:var(--teal);}
+  #partbar{background:var(--white);border-bottom:1.5px solid var(--grey-border);display:flex;align-items:stretch;padding:0 16px;gap:2px;height:var(--partbar-h);flex-shrink:0;}
+  .part-tab{flex-shrink:0;padding:0 20px;height:100%;display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:500;color:var(--grey-text);border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;background:none;border-left:none;border-right:none;border-top:none;}
+  .part-tab:hover{color:var(--teal);background:var(--teal-light);}
+  .part-tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600;}
+  .q-range{background:var(--grey-border);color:var(--grey-text);font-size:11px;font-weight:500;padding:1px 6px;border-radius:10px;}
+  .part-tab.active .q-range{background:var(--teal);color:#fff;}
+  .score-dot{width:7px;height:7px;border-radius:50%;background:var(--grey-border);transition:background .2s;}
+  .score-dot.done{background:var(--teal);}
+  #main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;position:relative;}
+  .part-panel{display:none;flex:1;flex-direction:column;min-height:0;overflow:hidden;}
+  .part-panel.active{display:flex;}
+  .instruction-box{background:var(--white);border-bottom:1.5px solid var(--grey-border);padding:12px 28px;font-size:14px;line-height:1.6;flex-shrink:0;}
+  .instruction-box strong{font-weight:600;}
+  .audio-bar{background:#1a1a1a;padding:12px 28px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
+  .audio-track-label{color:#aaa;font-size:12px;font-weight:500;min-width:72px;}
+  .play-btn{width:36px;height:36px;border-radius:50%;background:var(--teal);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .play-btn:hover{background:var(--teal-dark);}
+  .play-btn svg{width:14px;height:14px;fill:white;}
+  .progress-wrap{flex:1;height:5px;background:#333;border-radius:3px;cursor:pointer;position:relative;}
+  .progress-fill{height:100%;background:var(--teal);border-radius:3px;width:0%;pointer-events:none;}
+  .time-display{color:#ccc;font-size:12px;min-width:88px;text-align:right;font-family:'DM Sans',monospace;}
+  .audio-notice{background:#1a1a1a;border:1px solid #444;border-radius:5px;padding:5px 12px;font-size:11.5px;color:#f59e0b;white-space:nowrap;}
+  .scroll-layout{flex:1;overflow-y:auto;padding:24px 28px;}
+  .single-inner{max-width:820px;margin:0 auto;}
+  .split-wrap{flex:1;display:flex;min-height:0;overflow:hidden;}
+  .split-left{overflow-y:auto;background:var(--white);border-right:1.5px solid var(--grey-border);padding:24px 28px;flex:1;}
+  .split-right{overflow-y:auto;background:var(--grey-bg);padding:24px 28px;flex:1;}
+  .article-title{font-family:'Source Serif 4',serif;font-size:19px;font-weight:600;margin-bottom:16px;}
+  h3.section-heading{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--grey-text);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--grey-border);}
+  .q-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;background:var(--teal);color:#fff;font-size:11px;font-weight:700;flex-shrink:0;margin-right:6px;}
+  .mc-question{margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--grey-border);}
+  .mc-question:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .mc-situation{font-size:12.5px;color:var(--grey-text);margin-bottom:4px;font-style:italic;}
+  .mc-stem{font-family:'Source Serif 4',serif;font-size:15px;font-weight:600;margin-bottom:10px;line-height:1.5;}
+  .mc-options{display:flex;flex-direction:column;gap:7px;}
+  .mc-opt{display:flex;align-items:flex-start;gap:10px;padding:9px 13px;border:1.5px solid var(--grey-border);border-radius:6px;cursor:pointer;transition:all .12s;background:var(--white);font-size:14px;font-family:'Source Serif 4',serif;line-height:1.5;}
+  .mc-opt:hover{border-color:var(--teal);background:var(--teal-light);}
+  .mc-opt.selected{border-color:var(--teal);background:var(--teal-light);}
+  .mc-opt.correct{border-color:var(--green);background:#edfbf3;color:var(--green);}
+  .mc-opt.wrong{border-color:var(--red);background:#fdf0ef;color:var(--red);}
+  .opt-letter{width:21px;height:21px;border-radius:50%;border:1.5px solid var(--grey-border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'DM Sans',sans-serif;margin-top:2px;}
+  .mc-opt.selected .opt-letter{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .mc-opt.correct .opt-letter{background:var(--green);border-color:var(--green);color:#fff;}
+  .mc-opt.wrong .opt-letter{background:var(--red);border-color:var(--red);color:#fff;}
+  .sent-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--grey-border);font-family:'Source Serif 4',serif;font-size:15px;}
+  .sent-row:last-child{border-bottom:none;}
+  .sent-text{flex:1;line-height:1.6;}
+  .gap-input{border:none;border-bottom:2px solid var(--teal);background:transparent;font-family:'Source Serif 4',serif;font-size:15px;min-width:160px;padding:2px 6px;outline:none;color:var(--black);}
+  .gap-input:focus{background:#fffde8;}
+  .gap-input.correct{color:var(--green);border-bottom-color:var(--green);}
+  .gap-input.wrong{color:var(--red);border-bottom-color:var(--red);}
+  .gap-input:disabled{background:var(--grey-bg);cursor:not-allowed;}
+
+  /* Part 3 — Inspera matching with drag-and-drop */
+  .p3-match-wrap{display:grid;grid-template-columns:1fr 1fr;gap:32px;height:100%;}
+  .p3-speaker-list{display:flex;flex-direction:column;gap:18px;}
+  .p3-speaker-row{display:flex;align-items:center;gap:14px;}
+  .p3-speaker-name{font-size:14px;font-weight:500;color:var(--black);min-width:90px;}
+  .p3-gap-box{
+    flex:1;border:2px dashed #93c5fd;border-radius:6px;
+    background:#eff6ff;height:46px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+    color:#93c5fd;transition:all .15s;position:relative;user-select:none;
+  }
+  .p3-gap-box.over{background:#dbeafe;border-color:#3b82f6;border-style:solid;}
+  .p3-gap-box.filled{border-style:solid;border-color:var(--teal);background:var(--teal-light);color:var(--teal-dark);font-weight:700;font-size:14px;cursor:pointer;}
+  .p3-gap-box.correct{border-color:var(--green)!important;background:#edfbf3!important;color:var(--green)!important;}
+  .p3-gap-box.wrong{border-color:var(--red)!important;background:#fdf0ef!important;color:var(--red)!important;}
+  .p3-gap-qnum{position:absolute;top:-10px;left:10px;background:var(--teal);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;font-family:'DM Sans',sans-serif;}
+  .p3-opt-list{display:flex;flex-direction:column;gap:8px;}
+  .p3-opt-card{
+    border:1.5px solid var(--grey-border);border-radius:8px;
+    padding:10px 14px;background:var(--white);
+    font-size:13.5px;font-family:'Source Serif 4',serif;line-height:1.5;
+    cursor:grab;transition:all .15s;display:flex;align-items:center;gap:10px;
+    user-select:none;
+  }
+  .p3-opt-card:hover{border-color:var(--teal);background:var(--teal-light);}
+  .p3-opt-card:active{cursor:grabbing;opacity:.7;}
+  .p3-opt-card.used{opacity:.38;cursor:not-allowed;background:var(--grey-bg);}
+  .p3-opt-card.dragging{opacity:.4;}
+  .p3-opt-card.correct{border-color:var(--green);background:#edfbf3;}
+  .p3-opt-card.wrong{border-color:var(--red);background:#fdf0ef;}
+  .p3-opt-key{width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Sans',sans-serif;}
+  .p3-opt-card.used .p3-opt-key{background:var(--grey-border);}
+
+  /* Highlights */
+    .highlight-toolbar {
+    position:fixed; display:none; z-index:500;
+    background:var(--black); border-radius:8px; padding:5px 8px;
+    gap:4px; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,.3);
+  }
+  .highlight-toolbar.show{display:flex;}
+  .hl-btn{background:none;border:none;cursor:pointer;border-radius:5px;padding:4px 8px;font-size:13px;font-weight:600;color:#fff;font-family:'DM Sans',sans-serif;transition:background .12s;}
+  .hl-btn:hover{background:rgba(255,255,255,.15);}
+  .hl-btn.yellow{color:#fde68a;}
+  .hl-btn.green{color:#6ee7b7;}
+  .hl-btn.pink{color:#fca5a5;}
+  .hl-btn.note-btn{color:#93c5fd;}
+  .hl-btn.erase{color:#d1d5db;}
+  mark.hl-yellow{background:#fde68a;color:inherit;border-radius:2px;}
+  mark.hl-green{background:#6ee7b7;color:inherit;border-radius:2px;}
+  mark.hl-pink{background:#fca5a5;color:inherit;border-radius:2px;}
+  mark.has-note{cursor:pointer;border-bottom:2px dotted #2563eb;}
+
+  /* Notes sidebar */
+  #notes-panel{
+    position:fixed;right:0;top:var(--topbar-h);bottom:var(--bottombar-h);
+    width:280px;background:var(--white);border-left:1.5px solid var(--grey-border);
+    z-index:200;transform:translateX(100%);transition:transform .25s;
+    display:flex;flex-direction:column;box-shadow:-4px 0 16px rgba(0,0,0,.1);
+  }
+  #notes-panel.open{transform:translateX(0);}
+  #notes-header{padding:14px 16px;border-bottom:1px solid var(--grey-border);display:flex;align-items:center;justify-content:space-between;}
+  #notes-header h4{font-size:14px;font-weight:600;}
+  #notes-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--grey-text);}
+  #notes-list{flex:1;overflow-y:auto;padding:12px;}
+  .note-card{background:var(--grey-bg);border-radius:8px;padding:10px 12px;margin-bottom:10px;border:1px solid var(--grey-border);}
+  .note-card .note-excerpt{font-size:11px;color:var(--grey-text);margin-bottom:6px;font-style:italic;line-height:1.4;border-left:2px solid var(--teal);padding-left:6px;}
+  .note-card textarea{width:100%;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;resize:none;outline:none;color:var(--black);min-height:48px;}
+  .note-card .note-del{display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:none;border:1.5px solid var(--red);border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;color:var(--red);padding:3px 9px;font-family:'DM Sans',sans-serif;transition:all .12s;}
+  .note-card .note-del:hover{background:#fee2e2;}
+
+  /* Note input modal */
+  #note-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:center;justify-content:center;}
+  #note-modal.show{display:flex;}
+  #note-modal-inner{background:var(--white);border-radius:10px;padding:24px;width:360px;max-width:95%;}
+  #note-modal-inner h4{font-size:15px;font-weight:600;margin-bottom:12px;}
+  #note-textarea{width:100%;border:1.5px solid var(--grey-border);border-radius:6px;padding:10px;font-family:'DM Sans',sans-serif;font-size:14px;resize:none;height:100px;outline:none;}
+  #note-textarea:focus{border-color:var(--teal);}
+  .note-modal-btns{display:flex;gap:8px;margin-top:12px;justify-content:flex-end;}
+
+  /* Notes toggle btn in topbar */
+
+  #bottombar{background:var(--white);border-top:1.5px solid var(--grey-border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:var(--bottombar-h);flex-shrink:0;}
+  .part-dots{display:flex;gap:6px;align-items:center;}
+  .bottom-part-label{font-size:12px;color:var(--grey-text);font-weight:500;padding:4px 10px;border-radius:6px;border:1.5px solid var(--grey-border);cursor:pointer;background:none;}
+  .bottom-part-label.active{background:var(--teal);color:#fff;border-color:var(--teal);}
+  .nav-btn{display:flex;align-items:center;gap:6px;padding:8px 20px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid var(--grey-border);background:var(--white);color:var(--black);transition:all .12s;font-family:'DM Sans',sans-serif;}
+  .nav-btn:hover{border-color:var(--teal);}
+  .nav-btn.primary{background:var(--teal);color:#fff;border-color:var(--teal);}
+  .nav-btn.primary:hover{background:var(--teal-dark);}
+  .nav-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal-box{background:var(--white);border-radius:12px;padding:36px 44px;max-width:460px;width:92%;text-align:center;}
+  .modal-box h3{font-size:18px;font-weight:700;margin-bottom:10px;}
+  .modal-box p{font-size:14px;color:var(--grey-text);margin-bottom:24px;line-height:1.6;}
+  .modal-btns{display:flex;gap:12px;}
+  #report-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;align-items:center;justify-content:center;}
+  #report-overlay.show{display:flex;}
+  #report-modal{background:var(--white);border-radius:14px;max-width:700px;width:96%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;}
+  .report-header{padding:20px 28px;border-bottom:1.5px solid var(--grey-border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .report-header-left h2{font-size:19px;font-weight:700;}
+  .report-body{flex:1;overflow-y:auto;padding:24px 28px;}
+  .report-section{border:1.5px solid var(--grey-border);border-radius:10px;margin-bottom:16px;overflow:hidden;}
+  .report-section-header{padding:10px 18px;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;background:var(--teal-light);color:var(--teal-dark);}
+  .report-row{display:flex;justify-content:space-between;padding:8px 18px;border-top:1px solid var(--grey-border);font-size:13.5px;background:var(--white);}
+  .report-total{display:flex;justify-content:space-between;padding:10px 18px;border-top:2px solid var(--grey-border);font-weight:700;background:var(--grey-bg);}
+  .pass-badge{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;}
+  .pass-badge.pass{background:#dcfce7;color:var(--green);}
+  .pass-badge.fail{background:#fee2e2;color:var(--red);}
+  .grand-score{font-size:46px;font-weight:800;color:var(--teal);text-align:center;margin-bottom:4px;}
+  .grand-label{text-align:center;font-size:13px;color:var(--grey-text);margin-bottom:20px;}
+  .report-tabs{display:flex;gap:0;margin-top:12px;}
+  .report-tab{padding:7px 18px;border:none;border-bottom:3px solid transparent;background:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--grey-text);cursor:pointer;}
+  .report-tab.active{border-bottom-color:var(--teal);color:var(--teal);font-weight:600;}
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .compare-col-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--grey-text);padding-bottom:8px;border-bottom:1px solid var(--grey-border);margin-bottom:8px;}
+  .ans-row{display:flex;gap:8px;align-items:center;padding:3px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+  .ans-qnum{font-size:10px;font-weight:700;color:var(--teal);min-width:28px;}
+  ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--grey-border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- START MODAL -->
+<div id="start-overlay" style="display:flex;position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--white);border-radius:14px;padding:44px 52px;max-width:480px;width:92%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.3);">
+    <div style="width:56px;height:56px;background:var(--teal);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px;">🎧</div>
+    <h2 style="font-size:22px;font-weight:700;margin-bottom:8px;">First Trainer 2 — Practice Test 2</h2>
+    <p style="font-size:15px;color:var(--grey-text);margin-bottom:6px;">Listening</p>
+    <div style="background:var(--grey-bg);border-radius:8px;padding:14px 20px;margin:20px 0;text-align:left;font-size:14px;line-height:1.9;border:1.5px solid var(--grey-border);">
+      <div>🎧 4 Parts · 30 Questions</div>
+      <div>📻 Each recording plays <strong>twice</strong></div>
+      <div>✅ Pass: 18+ / 30 pts</div>
+    </div>
+    <div style="background:#fef5e7;border:1.5px solid var(--amber);border-radius:8px;padding:10px 14px;margin-bottom:20px;text-align:left;font-size:13px;color:#92400e;line-height:1.6;">
+      <strong>⚠️ In the real exam</strong> you cannot pause or rewind the audio. For authentic practice, avoid using the controls during the test.
+    </div>
+    <button onclick="document.getElementById('start-overlay').style.display='none'" style="background:var(--teal);color:#fff;border:none;border-radius:8px;padding:14px 40px;font-size:16px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;">Begin Test →</button>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="brand-text">First Trainer 2 — Practice Test 2<span>Listening</span></div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <a href="index.html" style="display:flex;align-items:center;gap:5px;padding:7px 13px;border:1.5px solid var(--grey-border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:500;color:var(--grey-text);text-decoration:none;" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--grey-border)';this.style.color='var(--grey-text)'">← Menu</a>
+    <button class="notes-btn" id="notes-toggle-btn" onclick="toggleNotesPanel()">📝 Notes</button>
+    <button id="submit-btn" onclick="confirmSubmit()" style="padding:7px 16px;border:1.5px solid var(--teal);border-radius:8px;background:var(--teal);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;">✓ Submit Test</button>
+  </div>
+</div>
+
+<!-- PART NAV -->
+<div id="partbar">
+  <button class="part-tab active" onclick="goTo(0)">Part 1 <span class="q-range">1–8</span><span class="score-dot" id="dot0"></span></button>
+  <button class="part-tab" onclick="goTo(1)">Part 2 <span class="q-range">9–18</span><span class="score-dot" id="dot1"></span></button>
+  <button class="part-tab" onclick="goTo(2)">Part 3 <span class="q-range">19–23</span><span class="score-dot" id="dot2"></span></button>
+  <button class="part-tab" onclick="goTo(3)">Part 4 <span class="q-range">24–30</span><span class="score-dot" id="dot3"></span></button>
+</div>
+
+<div id="main">
+
+<!-- PART 1 -->
+<div class="part-panel active" id="panel0">
+  <div class="instruction-box"><strong>Questions 1–8</strong> — You will hear people talking in eight different situations. For each question, choose the best answer (<strong>A</strong>, <strong>B</strong> or <strong>C</strong>).</div>
+  <div class="audio-bar">
+    <div class="audio-track-label">🎵 Track 33</div>
+    <button class="play-btn" id="play0" onclick="togglePlay(0)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+    <div class="progress-wrap" id="pw0" onclick="seekAudio(0,event)"><div class="progress-fill" id="pf0"></div></div>
+    <div class="time-display" id="td0">0:00 / --:--</div>
+    <div class="audio-notice">⚠️ Real exam: no pause or rewind</div>
+  </div>
+  <div class="scroll-layout"><div class="single-inner" id="p1q"></div></div>
+</div>
+
+<!-- PART 2 -->
+<div class="part-panel" id="panel1">
+  <div class="instruction-box"><strong>Questions 9–18</strong> — You will hear a cameraman called Chris Jones giving a talk about filming a wildlife documentary in Gabon, Africa. For each question, complete the sentences with a <strong>word or short phrase</strong>.</div>
+  <div class="audio-bar">
+    <div class="audio-track-label">🎵 Track 36</div>
+    <button class="play-btn" id="play1" onclick="togglePlay(1)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+    <div class="progress-wrap" id="pw1" onclick="seekAudio(1,event)"><div class="progress-fill" id="pf1"></div></div>
+    <div class="time-display" id="td1">0:00 / --:--</div>
+    <div class="audio-notice">⚠️ Real exam: no pause or rewind</div>
+  </div>
+  <div class="scroll-layout"><div class="single-inner">
+    <div class="article-title">Filming African wildlife in Loango National Park, Gabon</div>
+    <div id="p2q"></div>
+  </div></div>
+</div>
+
+<!-- PART 3 -->
+<div class="part-panel" id="panel2">
+  <div class="instruction-box"><strong>Questions 19–23</strong> — You will hear five short extracts in which people are talking about their experiences of doing part-time courses. For each question, choose from the list (<strong>A–H</strong>) how each speaker says they benefited from doing a part-time course. Use each letter only once. There are three extra letters you do not need to use.</div>
+  <div class="audio-bar">
+    <div class="audio-track-label">🎵 Track 40</div>
+    <button class="play-btn" id="play2" onclick="togglePlay(2)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+    <div class="progress-wrap" id="pw2" onclick="seekAudio(2,event)"><div class="progress-fill" id="pf2"></div></div>
+    <div class="time-display" id="td2">0:00 / --:--</div>
+    <div class="audio-notice">⚠️ Real exam: no pause or rewind</div>
+  </div>
+  <div class="split-wrap">
+    <div class="split-left">
+      <h3 class="section-heading">Speakers — drag an option into each box</h3>
+      <div class="p3-speaker-list" id="p3-speakers"></div>
+    </div>
+    <div class="split-right">
+      <h3 class="section-heading">Options A–H</h3>
+      <div class="p3-opt-list" id="p3-opts"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PART 4 -->
+<div class="part-panel" id="panel3">
+  <div class="instruction-box"><strong>Questions 24–30</strong> — You will hear an interview with a retired sportswoman called Gemma Porter, who now runs her own business. For each question, choose the best answer (<strong>A</strong>, <strong>B</strong> or <strong>C</strong>).</div>
+  <div class="audio-bar">
+    <div class="audio-track-label">🎵 Track 44</div>
+    <button class="play-btn" id="play3" onclick="togglePlay(3)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+    <div class="progress-wrap" id="pw3" onclick="seekAudio(3,event)"><div class="progress-fill" id="pf3"></div></div>
+    <div class="time-display" id="td3">0:00 / --:--</div>
+    <div class="audio-notice">⚠️ Real exam: no pause or rewind</div>
+  </div>
+  <div class="scroll-layout"><div class="single-inner" id="p4q"></div></div>
+</div>
+
+</div><!-- #main -->
+
+<div id="hl-toolbar" class="highlight-toolbar">
+  <button class="hl-btn yellow" onclick="applyHighlight('hl-yellow')" title="Yellow highlight">▐ Yellow</button>
+  <button class="hl-btn green" onclick="applyHighlight('hl-green')" title="Green highlight">▐ Green</button>
+  <button class="hl-btn pink" onclick="applyHighlight('hl-pink')" title="Pink highlight">▐ Pink</button>
+  <button class="hl-btn note-btn" onclick="addNote()" title="Add note">📝 Note</button>
+  <button class="hl-btn erase" onclick="eraseHighlight()" title="Remove highlight">✕ Clear</button>
+</div>
+
+<!-- NOTES PANEL -->
+<div id="notes-panel">
+  <div id="notes-header">
+    <h4>📝 My Notes</h4>
+    <button id="notes-close" onclick="toggleNotesPanel()">✕</button>
+  </div>
+  <div id="notes-list"><p style="font-size:13px;color:var(--grey-text);padding:8px;">Select text in the reading passages and click "Note" to add annotations.</p></div>
+</div>
+
+<!-- NOTE INPUT MODAL -->
+<div id="note-modal">
+  <div id="note-modal-inner">
+    <h4>Add a note</h4>
+    <div id="note-excerpt-display" style="font-size:12px;color:var(--grey-text);font-style:italic;margin-bottom:10px;padding:6px;background:var(--grey-bg);border-radius:4px;border-left:3px solid var(--teal);"></div>
+    <textarea id="note-textarea" placeholder="Type your note here…"></textarea>
+    <div class="note-modal-btns">
+      <button class="nav-btn" onclick="closeNoteModal()">Cancel</button>
+      <button class="nav-btn primary" onclick="saveNote()">Save note</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottombar">
+  <div class="part-dots" id="bottom-dots"></div>
+  <div style="display:flex;gap:10px;">
+    <button class="nav-btn" id="btn-prev" onclick="goTo(currentPart-1)" disabled>← Previous</button>
+    <button class="nav-btn primary" id="btn-next" onclick="goTo(currentPart+1)">Next →</button>
+  </div>
+</div>
+
+<!-- CONFIRM SUBMIT -->
+<div class="modal-overlay" id="confirm-overlay">
+  <div class="modal-box">
+    <div style="font-size:36px;margin-bottom:12px;">📋</div>
+    <h3>Submit your answers?</h3>
+    <p>Once submitted your answers will be marked and you will not be able to change them.</p>
+    <div class="modal-btns">
+      <button class="nav-btn" onclick="document.getElementById('confirm-overlay').classList.remove('show')" style="flex:1;justify-content:center;">Cancel</button>
+      <button class="nav-btn primary" onclick="submitTest()" style="flex:1;justify-content:center;">Yes, submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div id="report-overlay">
+  <div id="report-modal">
+    <div class="report-header">
+      <div class="report-header-left">
+        <h2>Listening — Results</h2>
+        <div class="report-tabs">
+          <button class="report-tab active" id="rtab-scores" onclick="switchTab('scores')">📊 Score Report</button>
+          <button class="report-tab" id="rtab-compare" onclick="switchTab('compare')">🔍 Compare Answers</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        <button onclick="printResults()" style="padding:7px 14px;border:1.5px solid var(--grey-border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:500;color:var(--grey-text);font-family:'DM Sans',sans-serif;" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--grey-border)';this.style.color='var(--grey-text)'">🖨️ Print</button>
+        <button onclick="document.getElementById('report-overlay').style.display='none'" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--grey-bg);border:1.5px solid var(--grey-border);border-radius:8px;cursor:pointer;font-size:16px;color:var(--grey-text);" onmouseover="this.style.background='#fee2e2';this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.background='var(--grey-bg)';this.style.borderColor='var(--grey-border)';this.style.color='var(--grey-text)'">✕</button>
+      </div>
+    </div>
+    <div class="report-body" id="report-body"></div>
+  </div>
+</div>
+
+<script>
+// ═══ DATA ═══
+const p1Data=[
+  {q:1,situation:'You hear two neighbours talking about a new statue in their town.',stem:'What does the woman say about it?',opts:['A She suspects many people won\'t like it.','B She doesn\'t understand what it represents.','C She is convinced it should be removed.'],ans:'B'},
+  {q:2,situation:'You hear a music teacher talking about his job.',stem:'He regrets that',opts:['A music is rarely considered to be an essential subject.','B there are so few advanced level music students.','C he cannot teach the music that he personally likes.'],ans:'A'},
+  {q:3,situation:'You hear two journalists talking about driverless cars.',stem:'What do they both think about them?',opts:['A Most drivers would be keen to try them out.','B More tests have to be done on their reliability.','C There will need to be many changes to driving laws.'],ans:'C'},
+  {q:4,situation:'You hear a doctor talking on the radio about colds.',stem:'She says many of her patients are unaware that',opts:['A antibiotics are ineffective at treating colds.','B healthy eating may help the symptoms of colds.','C there are things they can do to avoid colds.'],ans:'C'},
+  {q:5,situation:'You hear a brother and sister talking about a musical they have seen.',stem:'Why does the woman like the musical?',opts:['A It explores themes that are important to her.','B She feels sympathetic to its central character.','C The songs are entertaining and easy to remember.'],ans:'A'},
+  {q:6,situation:'You hear a woman talking about horse riding.',stem:'How has the woman benefited from going riding again?',opts:['A She now has a new group of friends.','B Riding has helped to improve her balance.','C It has enabled her to deal effectively with stress.'],ans:'A'},
+  {q:7,situation:'You hear a customer complaining in a department store.',stem:'What does the shop assistant agree to do?',opts:['A exchange the item for a different size','B offer a refund for the unsatisfactory item','C give him a credit to spend in the store'],ans:'B'},
+  {q:8,situation:'You hear a food critic talking about a chef called Peter Tinney.',stem:'What is she doing?',opts:['A describing Peter\'s creative approach to cooking','B justifying why Peter deserves the award he has won','C defending Peter\'s decision to close his restaurants'],ans:'C'},
+];
+const p2Data=[
+  {q:9,before:"Chris wanted to visit Gabon after seeing an unusual",after:"featuring some of its animals.",ans:['advert','advertisement']},
+  {q:10,before:"When researching his trip, Chris says that a",after:"was most useful to him.",ans:['guidebook']},
+  {q:11,before:"Chris's boss advised him that he needed a",after:"visa for his trip.",ans:['work']},
+  {q:12,before:"A",after:"offered to be Chris's local guide in Gabon.",ans:['biologist']},
+  {q:13,before:"Chris appreciated the ride by",after:"on his way to Loango National Park.",ans:['helicopter']},
+  {q:14,before:"Chris's guide explained that forest elephants visit the beach to get",after:".",ans:['salt']},
+  {q:15,before:"Chris was convinced that the buffalo looked like they were",after:"in the sea.",ans:['surfing']},
+  {q:16,before:"Chris didn't manage to film any",after:"during his trip.",ans:['leopard','leopards']},
+  {q:17,before:"Chris uses the word '",after:"' to describe the people he stayed with.",ans:['welcoming']},
+  {q:18,before:"Chris says the National Park has had difficulties in increasing",after:".",ans:['tourism']},
+];
+// Part 3 — part-time courses content
+const p3Speakers=[
+  {q:19,label:'Speaker 1',ans:'H'},
+  {q:20,label:'Speaker 2',ans:'C'},
+  {q:21,label:'Speaker 3',ans:'B'},
+  {q:22,label:'Speaker 4',ans:'F'},
+  {q:23,label:'Speaker 5',ans:'A'},
+];
+const p3Options=[
+  {key:'A',text:'It helped me get promoted at work.'},
+  {key:'B',text:'It made me reconsider my priorities in life.'},
+  {key:'C',text:'It gave me a way to fill my time.'},
+  {key:'D',text:'It introduced me to like-minded people.'},
+  {key:'E',text:'It enabled me to relax after work.'},
+  {key:'F',text:'It allowed me to use my creativity.'},
+  {key:'G',text:'It provided the chance to gain a new qualification.'},
+  {key:'H',text:'It encouraged me to consider taking further courses.'},
+];
+const p4Data=[
+  {q:24,stem:'Why did Gemma retire from sport?',opts:['A She had won all the major championships.','B She wanted to spend less time travelling for work.','C She was starting to get injured more often.'],ans:'B'},
+  {q:25,stem:'How did Gemma feel immediately after her retirement?',opts:['A She was dissatisfied at not training every day.','B Her financial situation was a concern to her.','C She missed her former competitors.'],ans:'C'},
+  {q:26,stem:'What did Gemma feel was a disadvantage for her when applying for jobs?',opts:['A She lacked formal qualifications.','B She wasn\'t used to fixed working hours.','C She had never worked in an office.'],ans:'A'},
+  {q:27,stem:'Why did Gemma start a business helping retired sportspeople to find new careers?',opts:['A She still had many friends in the world of sport.','B No other recruitment companies offered this service.','C Her experience meant she could offer the best advice.'],ans:'C'},
+  {q:28,stem:'What motivated Gemma in the early days of her business?',opts:['A the determination to prove other people wrong','B the belief that she was doing something worthwhile','C the desire to gain a reputation as a business woman'],ans:'B'},
+  {q:29,stem:'Gemma says some sportspeople can have problems joining a company because',opts:['A they can be impatient with colleagues.','B they dislike receiving negative feedback.','C they object to having to follow company rules.'],ans:'A'},
+  {q:30,stem:"Gemma thinks companies will hire more retired sportspeople in the future because",opts:['A sportspeople are better at accepting change than other employees.','B both companies and sportspeople are focused on achieving goals.','C companies will only survive if they have staff who are competitive.'],ans:'B'},
+];
+
+// ═══ EMBEDDED AUDIO ═══
+const audioSrc=[
+  'TRACK 33.mp3',
+  'TRACK 36.mp3',
+  'TRACK 40.mp3',
+  'TRACK 44.mp3'
+];
+
+// ═══ AUDIO PLAYER ═══
+const audioEls=[0,1,2,3].map(i=>{
+  const a=new Audio(audioSrc[i]);
+  a.preload='metadata';
+  a.addEventListener('timeupdate',()=>{
+    const pct=a.duration?(a.currentTime/a.duration)*100:0;
+    document.getElementById('pf'+i).style.width=pct+'%';
+    document.getElementById('td'+i).textContent=fmt(a.currentTime)+' / '+fmt(a.duration||0);
+  });
+  a.addEventListener('ended',()=>{document.getElementById('play'+i).innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';currentlyPlaying=null;});
+  a.addEventListener('loadedmetadata',()=>{document.getElementById('td'+i).textContent='0:00 / '+fmt(a.duration);});
+  return a;
+});
+let currentlyPlaying=null;
+function fmt(s){const m=Math.floor(s/60);return String(m).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');}
+function togglePlay(i){
+  const a=audioEls[i],btn=document.getElementById('play'+i);
+  if(a.paused){
+    if(currentlyPlaying!==null&&currentlyPlaying!==i){audioEls[currentlyPlaying].pause();document.getElementById('play'+currentlyPlaying).innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';}
+    a.play();currentlyPlaying=i;btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+  }else{a.pause();btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';}
+}
+function seekAudio(i,e){const a=audioEls[i],w=document.getElementById('pw'+i),r=w.getBoundingClientRect();a.currentTime=((e.clientX-r.left)/r.width)*(a.duration||0);}
+
+// ═══ NAVIGATION ═══
+let currentPart=0;
+function goTo(n){
+  if(n<0||n>3)return;
+  document.querySelectorAll('.part-panel').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.part-tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+  document.querySelectorAll('.bottom-part-label').forEach((t,i)=>t.classList.toggle('active',i===n));
+  currentPart=n;
+  document.getElementById('btn-prev').disabled=n===0;
+  document.getElementById('btn-next').style.display=n<3?'flex':'none';
+}
+const bd=document.getElementById('bottom-dots');
+['Part 1','Part 2','Part 3','Part 4'].forEach((l,i)=>{
+  const b=document.createElement('button');b.className='bottom-part-label'+(i===0?' active':'');
+  b.textContent=l;b.onclick=()=>goTo(i);bd.appendChild(b);
+});
+
+// ═══ BUILD QUESTIONS ═══
+const p1c=document.getElementById('p1q');
+p1Data.forEach(d=>{
+  const div=document.createElement('div');div.className='mc-question';
+  div.innerHTML=`<div class="mc-situation">${d.situation}</div><div class="mc-stem"><span class="q-num">${d.q}</span>${d.stem}</div><div class="mc-options">${d.opts.map(o=>`<div class="mc-opt" data-val="${o[0]}" data-q="${d.q}" onclick="selMC(this)"><span class="opt-letter">${o[0]}</span>${o.slice(2)}</div>`).join('')}</div>`;
+  p1c.appendChild(div);
+});
+
+const p2c=document.getElementById('p2q');
+p2Data.forEach(d=>{
+  const div=document.createElement('div');div.className='sent-row';
+  div.innerHTML=`<span class="q-num">${d.q}</span><span class="sent-text">${d.before} <input class="gap-input" data-q="${d.q}" placeholder="…"> ${d.after}</span>`;
+  p2c.appendChild(div);
+});
+
+// Part 3 — drag and drop
+let p3DragKey=null;
+const p3Assignments={};
+
+function buildP3(){
+  const spk=document.getElementById('p3-speakers');
+  const opts=document.getElementById('p3-opts');
+  p3Speakers.forEach(d=>{
+    const row=document.createElement('div');row.className='p3-speaker-row';
+    row.innerHTML=`<div class="p3-speaker-name">${d.label}</div>
+      <div class="p3-gap-box" id="gap${d.q}" data-q="${d.q}"
+        ondragover="event.preventDefault();this.classList.add('over')"
+        ondragleave="this.classList.remove('over')"
+        ondrop="p3Drop(event,${d.q})">
+        <span class="p3-gap-qnum">${d.q}</span>
+        <span id="gv${d.q}" style="color:#93c5fd;">—</span>
+      </div>`;
+    spk.appendChild(row);
+  });
+  p3Options.forEach(o=>{
+    const card=document.createElement('div');
+    card.className='p3-opt-card';card.id='po'+o.key;
+    card.draggable=true;card.dataset.key=o.key;
+    card.innerHTML=`<span class="p3-opt-key">${o.key}</span>${o.text}`;
+    card.addEventListener('dragstart',e=>{
+      p3DragKey=o.key;card.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+    opts.appendChild(card);
+  });
+  // Allow dragging filled gap back to the options list
+  opts.addEventListener('dragover',e=>e.preventDefault());
+  opts.addEventListener('drop',e=>{
+    e.preventDefault();
+    if(!p3DragKey)return;
+    // Find if this key was in a gap — remove it
+    Object.entries(p3Assignments).forEach(([q,k])=>{
+      if(k===p3DragKey){
+        delete p3Assignments[q];
+        const gap=document.getElementById('gap'+q);
+        gap.classList.remove('filled');
+        gap.draggable=false;
+        document.getElementById('gv'+q).textContent='—';
+        document.getElementById('gv'+q).style.color='#93c5fd';
+      }
+    });
+    // Mark card as available
+    const card=document.getElementById('po'+p3DragKey);
+    if(card){card.classList.remove('used');card.draggable=true;}
+    p3DragKey=null;
+  });
+}
+buildP3();
+
+function p3Drop(e,q){
+  e.preventDefault();
+  const gap=document.getElementById('gap'+q);
+  gap.classList.remove('over');
+  if(!p3DragKey)return;
+  // Return previous assignment to pool
+  const prev=p3Assignments[q];
+  if(prev&&prev!==p3DragKey){
+    const oldCard=document.getElementById('po'+prev);
+    if(oldCard){oldCard.classList.remove('used');oldCard.draggable=true;}
+  }
+  // Also clear source gap if dragging from another gap
+  Object.entries(p3Assignments).forEach(([oq,k])=>{
+    if(k===p3DragKey&&oq!=q){
+      delete p3Assignments[oq];
+      const og=document.getElementById('gap'+oq);
+      og.classList.remove('filled');
+      document.getElementById('gv'+oq).textContent='—';
+      document.getElementById('gv'+oq).style.color='#93c5fd';
+    }
+  });
+  p3Assignments[q]=p3DragKey;
+  document.getElementById('gv'+q).textContent=p3DragKey;
+  document.getElementById('gv'+q).style.color='var(--teal-dark)';
+  gap.classList.add('filled');
+  gap.draggable=true;
+  const card=document.getElementById('po'+p3DragKey);
+  if(card){card.classList.add('used');card.draggable=false;}
+  p3DragKey=null;
+}
+
+// Allow dragging filled gap boxes back to options
+document.addEventListener('dragstart',e=>{
+  const gap=e.target.closest('.p3-gap-box.filled');
+  if(!gap)return;
+  const q=gap.dataset.q;
+  const k=p3Assignments[q];
+  if(!k)return;
+  p3DragKey=k;
+  // Remove from gap immediately so it can be dropped elsewhere
+  delete p3Assignments[q];
+  gap.classList.remove('filled');
+  gap.draggable=false;
+  document.getElementById('gv'+q).textContent='—';
+  document.getElementById('gv'+q).style.color='#93c5fd';
+  const card=document.getElementById('po'+k);
+  if(card){card.classList.remove('used');card.draggable=true;}
+});
+
+const p4c=document.getElementById('p4q');
+p4Data.forEach(d=>{
+  const div=document.createElement('div');div.className='mc-question';
+  div.innerHTML=`<div class="mc-stem"><span class="q-num">${d.q}</span>${d.stem}</div><div class="mc-options">${d.opts.map(o=>`<div class="mc-opt" data-val="${o[0]}" data-q="${d.q}" onclick="selMC(this)"><span class="opt-letter">${o[0]}</span>${o.slice(2)}</div>`).join('')}</div>`;
+  p4c.appendChild(div);
+});
+
+function selMC(el){
+  document.querySelectorAll(`.mc-opt[data-q="${el.dataset.q}"]`).forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ═══ SUBMIT ═══
+const scores={p1:0,p2:0,p3:0,p4:0};
+let testSubmitted=false;
+window.addEventListener('beforeunload', function(e){
+  if(!testSubmitted){ e.preventDefault(); e.returnValue=''; }
+});
+
+function confirmSubmit(){
+  if(testSubmitted){showReport();return;}
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+function submitTest(){
+  document.getElementById('confirm-overlay').classList.remove('show');
+  testSubmitted=true;
+  document.querySelectorAll('.mc-opt').forEach(b=>b.onclick=null);
+  document.querySelectorAll('.gap-input').forEach(i=>i.disabled=true);
+  document.querySelectorAll('.p3-opt-card').forEach(c=>{c.draggable=false;c.style.cursor='default';});
+  document.querySelectorAll('.p3-gap-box').forEach(g=>{g.ondragover=null;g.ondrop=null;});
+  audioEls.forEach(a=>{if(!a.paused)a.pause();});
+  checkAll();
+  // Capture individual answers for the full report
+  const answers={};
+  const p1a={};
+  p1Data.forEach(d=>{let ch='';document.querySelectorAll(`.mc-opt[data-q="${d.q}"]`).forEach(b=>{if(b.dataset.userPicked==='true')ch=b.dataset.val;});p1a[d.q]=ch;});
+  answers.p1=p1a;
+  const p2a={};
+  p2Data.forEach(d=>{const inp=document.querySelector(`.gap-input[data-q="${d.q}"]`);p2a[d.q]=inp?inp.value.trim():'';});
+  answers.p2=p2a;
+  const p3a={};
+  p3Speakers.forEach(d=>{p3a[d.q]=p3Assignments[d.q]||'';});
+  answers.p3=p3a;
+  const p4a={};
+  p4Data.forEach(d=>{let ch='';document.querySelectorAll(`.mc-opt[data-q="${d.q}"]`).forEach(b=>{if(b.dataset.userPicked==='true')ch=b.dataset.val;});p4a[d.q]=ch;});
+  answers.p4=p4a;
+  // Save to localStorage for progress tracking
+  try{
+    const d={submitted:true,scores:{p1:scores.p1,p2:scores.p2,p3:scores.p3,p4:scores.p4},answers};
+    localStorage.setItem('fce_t2_listening',JSON.stringify(d));
+  }catch(e){}
+  showReport();
+}
+function checkAll(){
+  let s1=0,s2=0,s3=0,s4=0;
+  p1Data.forEach(d=>{
+    let up=null;
+    document.querySelectorAll(`.mc-opt[data-q="${d.q}"]`).forEach(b=>{if(b.classList.contains('selected'))up=b.dataset.val;});
+    document.querySelectorAll(`.mc-opt[data-q="${d.q}"]`).forEach(b=>{
+      b.onclick=null;
+      if(b.dataset.val===d.ans){b.classList.add('correct');if(up===d.ans){b.dataset.userPicked='true';s1++;}}
+      else if(b.dataset.val===up){b.classList.remove('selected');b.classList.add('wrong');b.dataset.userPicked='true';}
+    });
+  });
+  document.querySelectorAll('.gap-input').forEach(inp=>{
+    const d=p2Data.find(x=>x.q==inp.dataset.q);if(!d)return;
+    const v=inp.value.trim().toLowerCase();
+    const ok=d.ans.map(a=>a.toLowerCase()).includes(v);
+    inp.classList.add(ok?'correct':'wrong');if(!ok)inp.title='Correct: '+d.ans[0];if(ok)s2++;
+  });
+  p3Speakers.forEach(d=>{
+    const gap=document.getElementById('gap'+d.q);
+    const placed=p3Assignments[d.q]||'';
+    const ok=placed===d.ans;
+    gap.classList.remove('filled','over');
+    gap.classList.add(ok?'correct':'wrong');
+    if(placed){document.getElementById('gv'+d.q).textContent=placed;}
+    else{document.getElementById('gv'+d.q).textContent='—';}
+    if(!ok&&placed)gap.title='Correct: '+d.ans;
+    if(ok)s3++;
+  });
+  p4Data.forEach(d=>{
+    let up=null;
+    document.querySelectorAll(`.mc-opt[data-q="${d.q}"]`).forEach(b=>{if(b.classList.contains('selected'))up=b.dataset.val;});
+    document.querySelectorAll(`.mc-opt[data-q="${d.q}"]`).forEach(b=>{
+      b.onclick=null;
+      if(b.dataset.val===d.ans){b.classList.add('correct');if(up===d.ans){b.dataset.userPicked='true';s4++;}}
+      else if(b.dataset.val===up){b.classList.remove('selected');b.classList.add('wrong');b.dataset.userPicked='true';}
+    });
+  });
+  scores.p1=s1;scores.p2=s2;scores.p3=s3;scores.p4=s4;
+  [0,1,2,3].forEach(i=>document.getElementById('dot'+i).classList.add('done'));
+}
+
+// ═══ REPORT ═══
+function showReport(){switchTab('scores');document.getElementById('report-overlay').style.display='flex';}
+function switchTab(tab){
+  document.getElementById('rtab-scores').classList.toggle('active',tab==='scores');
+  document.getElementById('rtab-compare').classList.toggle('active',tab==='compare');
+  tab==='scores'?renderScores():renderCompare();
+}
+function renderScores(){
+  const total=scores.p1+scores.p2+scores.p3+scores.p4,pass=total>=18;
+  document.getElementById('report-body').innerHTML=`
+    <div class="grand-score">${total} <span style="font-size:22px;color:var(--grey-text);font-weight:400;">/ 30</span></div>
+    <div class="grand-label">${pass?'✓ PASS — 18+ achieved':'✗ FAIL — below 18'}</div>
+    <div class="report-section">
+      <div class="report-section-header">🎧 Listening <span class="pass-badge ${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</span></div>
+      <div class="report-row"><span>Part 1 — Multiple Choice (short extracts)</span><span style="font-weight:700;">${scores.p1} / 8</span></div>
+      <div class="report-row"><span>Part 2 — Sentence Completion</span><span style="font-weight:700;">${scores.p2} / 10</span></div>
+      <div class="report-row"><span>Part 3 — Multiple Matching</span><span style="font-weight:700;">${scores.p3} / 5</span></div>
+      <div class="report-row"><span>Part 4 — Multiple Choice (interview)</span><span style="font-weight:700;">${scores.p4} / 7</span></div>
+      <div class="report-total"><span>Total (pass ≥ 18 / 30)</span><span style="font-size:18px;color:${pass?'var(--green)':'var(--red)'};">${total} / 30</span></div>
+    </div>`;
+}
+function renderCompare(){
+  const sH=t=>`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--grey-text);padding:10px 0 4px;">${t}</div>`;
+  const row=(q,y,c,ok)=>`<div class="ans-row"><span class="ans-qnum">${q}</span><span style="color:${ok?'var(--green)':'var(--red)'};font-weight:600;flex:1;">${y||'(blank)'}</span></div>`;
+  const rowC=(q,c)=>`<div class="ans-row"><span class="ans-qnum">${q}</span><span style="color:var(--green);font-weight:600;">${c}</span></div>`;
+  let y='',c='';
+  y+=sH('Part 1 (1 pt each)');c+=sH('Part 1 (1 pt each)');
+  p1Data.forEach(d=>{let ch='(blank)';document.querySelectorAll(`.mc-opt[data-q="${d.q}"]`).forEach(b=>{if(b.dataset.userPicked==='true')ch=b.dataset.val;});y+=row(d.q,ch,d.ans,ch===d.ans);c+=rowC(d.q,d.ans);});
+  y+=sH('Part 2 (1 pt each)');c+=sH('Part 2 (1 pt each)');
+  p2Data.forEach(d=>{const inp=document.querySelector(`.gap-input[data-q="${d.q}"]`);const v=inp?inp.value.trim():'';const ok=v&&d.ans.map(a=>a.toLowerCase()).includes(v.toLowerCase());y+=row(d.q,v||'(blank)',d.ans[0],ok);c+=rowC(d.q,d.ans[0]);});
+  y+=sH('Part 3 (1 pt each)');c+=sH('Part 3 (1 pt each)');
+  p3Speakers.forEach(d=>{const v=p3Assignments[d.q]||'';y+=row(d.q,v||'(blank)',d.ans,v===d.ans);c+=rowC(d.q,d.ans);});
+  y+=sH('Part 4 (1 pt each)');c+=sH('Part 4 (1 pt each)');
+  p4Data.forEach(d=>{let ch='(blank)';document.querySelectorAll(`.mc-opt[data-q="${d.q}"]`).forEach(b=>{if(b.dataset.userPicked==='true')ch=b.dataset.val;});y+=row(d.q,ch,d.ans,ch===d.ans);c+=rowC(d.q,d.ans);});
+  document.getElementById('report-body').innerHTML=`<div class="compare-grid"><div><div class="compare-col-head">Your Answers</div>${y}</div><div><div class="compare-col-head">Correct Answers</div>${c}</div></div>`;
+}
+function printResults(){
+  const total=scores.p1+scores.p2+scores.p3+scores.p4,pass=total>=18;
+  // Build compare data
+  function getP1Answer(q){let ch='(blank)';document.querySelectorAll(`.mc-opt[data-q="${q}"]`).forEach(b=>{if(b.dataset.userPicked==='true')ch=b.dataset.val;});return ch;}
+  function getP4Answer(q){let ch='(blank)';document.querySelectorAll(`.mc-opt[data-q="${q}"]`).forEach(b=>{if(b.dataset.userPicked==='true')ch=b.dataset.val;});return ch;}
+  function getP2Answer(q){const inp=document.querySelector(`.gap-input[data-q="${q}"]`);return inp?inp.value.trim()||'(blank)':'(blank)';}
+  const cRow=(q,yours,correct,ok)=>`<tr><td style="font-weight:700;color:#1a7d78;width:32px;">${q}</td><td style="color:${ok?'#1e7e44':'#c0392b'};font-weight:600;">${yours}</td><td style="color:#1e7e44;">${correct}</td></tr>`;
+  let p1rows='',p2rows='',p3rows='',p4rows='';
+  p1Data.forEach(d=>{const u=getP1Answer(d.q);p1rows+=cRow(d.q,u,d.ans,u===d.ans);});
+  p2Data.forEach(d=>{const u=getP2Answer(d.q);const ok=d.ans.map(a=>a.toLowerCase()).includes(u.toLowerCase());p2rows+=cRow(d.q,u,d.ans[0],ok);});
+  p3Speakers.forEach(d=>{const u=p3Assignments[d.q]||'(blank)';p3rows+=cRow(d.q,u,d.ans,u===d.ans);});
+  p4Data.forEach(d=>{const u=getP4Answer(d.q);p4rows+=cRow(d.q,u,d.ans,u===d.ans);});
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Listening Results</title><style>
+    body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;font-size:14px;color:#1a1a1a;}
+    h1{font-size:20px;} h2{font-size:15px;margin:24px 0 6px;color:#1a7d78;border-bottom:2px solid #e8f4f3;padding-bottom:4px;}
+    .big{font-size:40px;font-weight:800;color:#1a7d78;text-align:center;}
+    .center{text-align:center;margin-bottom:20px;}
+    .score-row{display:flex;justify-content:space-between;padding:7px 14px;border-bottom:1px solid #eee;}
+    .score-total{display:flex;justify-content:space-between;padding:9px 14px;font-weight:700;background:#f5f5f3;margin-bottom:24px;}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px;}
+    th{background:#1a7d78;color:#fff;padding:6px 10px;text-align:left;}
+    td{padding:5px 10px;border-bottom:1px solid #eee;}
+    @media print{body{margin:20px;}}
+  </style></head><body>
+  <h1>First Trainer 2 — Listening Results</h1>
+  <div class="big">${total}/30</div>
+  <div class="center" style="font-weight:700;color:${pass?'#1e7e44':'#c0392b'};">${pass?'✓ PASS':'✗ FAIL'}</div>
+  <div class="score-row"><span>Part 1 — Multiple Choice (short extracts)</span><strong>${scores.p1}/8</strong></div>
+  <div class="score-row"><span>Part 2 — Sentence Completion</span><strong>${scores.p2}/10</strong></div>
+  <div class="score-row"><span>Part 3 — Multiple Matching</span><strong>${scores.p3}/5</strong></div>
+  <div class="score-row"><span>Part 4 — Multiple Choice (interview)</span><strong>${scores.p4}/7</strong></div>
+  <div class="score-total"><span>Total (pass ≥ 18)</span><strong>${total}/30</strong></div>
+  <h2>Part 1 — Answer Comparison</h2>
+  <table><thead><tr><th>Q</th><th>Your Answer</th><th>Correct Answer</th></tr></thead><tbody>${p1rows}</tbody></table>
+  <h2>Part 2 — Answer Comparison</h2>
+  <table><thead><tr><th>Q</th><th>Your Answer</th><th>Correct Answer</th></tr></thead><tbody>${p2rows}</tbody></table>
+  <h2>Part 3 — Answer Comparison</h2>
+  <table><thead><tr><th>Q</th><th>Your Answer</th><th>Correct Answer</th></tr></thead><tbody>${p3rows}</tbody></table>
+  <h2>Part 4 — Answer Comparison</h2>
+  <table><thead><tr><th>Q</th><th>Your Answer</th><th>Correct Answer</th></tr></thead><tbody>${p4rows}</tbody></table>
+  </body></html>`);
+  win.document.close();win.focus();setTimeout(()=>win.print(),600);
+}
+
+// ═══ HIGHLIGHT & NOTES ═══
+const hlToolbar=document.getElementById('hl-toolbar');
+let savedRange=null,pendingNoteRange=null,pendingNoteExcerpt='';
+let noteStore=[];
+let noteIdCounter=0;
+
+// Show toolbar on text selection inside article bodies
+document.addEventListener('mouseup',e=>{
+  if(e.target.closest('#hl-toolbar')||e.target.closest('#notes-panel')||e.target.closest('#note-modal'))return;
+  const sel=window.getSelection();
+  if(!sel||sel.isCollapsed||sel.toString().trim().length===0){hlToolbar.classList.remove('show');return;}
+  // Only allow in article text areas
+  const inText=sel.anchorNode&&sel.anchorNode.parentElement&&sel.anchorNode.parentElement.closest('.article-body,.single-inner,.sent-text,.mc-stem,.mc-opt,.p3-opt-card,.p3-speaker-name,.mc-situation');
+  if(!inText){hlToolbar.classList.remove('show');return;}
+  savedRange=sel.getRangeAt(0).cloneRange();
+  const rect=sel.getRangeAt(0).getBoundingClientRect();
+  hlToolbar.style.left=Math.max(0,rect.left+rect.width/2-hlToolbar.offsetWidth/2)+'px';
+  hlToolbar.style.top=rect.top-44+window.scrollY+'px';
+  hlToolbar.classList.add('show');
+});
+document.addEventListener('mousedown',e=>{
+  if(!e.target.closest('#hl-toolbar'))hlToolbar.classList.remove('show');
+});
+
+function applyHighlight(cls){
+  if(!savedRange)return;
+  hlToolbar.classList.remove('show');
+  const mark=document.createElement('mark');
+  mark.className=cls;
+  try{savedRange.surroundContents(mark);}catch(e){
+    // fallback for cross-node selections
+    const frag=savedRange.extractContents();
+    mark.appendChild(frag);
+    savedRange.insertNode(mark);
+  }
+  window.getSelection().removeAllRanges();
+  savedRange=null;
+}
+
+function eraseHighlight(){
+  if(!savedRange)return;
+  hlToolbar.classList.remove('show');
+  const sel=window.getSelection();
+  // find mark elements in selection and unwrap
+  const container=savedRange.commonAncestorContainer;
+  const marks=container.nodeType===1?container.querySelectorAll('mark'):container.parentElement?.querySelectorAll('mark')??[];
+  marks.forEach(m=>{
+    if(savedRange.intersectsNode(m)){
+      const parent=m.parentNode;
+      while(m.firstChild)parent.insertBefore(m.firstChild,m);
+      parent.removeChild(m);
+    }
+  });
+  sel.removeAllRanges();
+  savedRange=null;
+}
+
+function addNote(){
+  if(!savedRange)return;
+  hlToolbar.classList.remove('show');
+  pendingNoteExcerpt=savedRange.toString().trim().slice(0,120)+(savedRange.toString().length>120?'…':'');
+  pendingNoteRange=savedRange;
+  document.getElementById('note-excerpt-display').textContent='"'+pendingNoteExcerpt+'"';
+  document.getElementById('note-textarea').value='';
+  document.getElementById('note-modal').classList.add('show');
+  document.getElementById('note-textarea').focus();
+}
+
+function closeNoteModal(){
+  document.getElementById('note-modal').classList.remove('show');
+  pendingNoteRange=null;
+}
+
+function saveNote(){
+  const text=document.getElementById('note-textarea').value.trim();
+  if(!text){closeNoteModal();return;}
+  // Apply blue underline to the selected text
+  if(pendingNoteRange){
+    const mark=document.createElement('mark');
+    mark.className='hl-yellow has-note';
+    const id='note-'+(++noteIdCounter);
+    mark.dataset.noteId=id;
+    mark.title='📝 '+text;
+    mark.onclick=()=>openNoteById(id);
+    try{pendingNoteRange.surroundContents(mark);}catch(e){
+      const frag=pendingNoteRange.extractContents();
+      mark.appendChild(frag);
+      pendingNoteRange.insertNode(mark);
+    }
+    noteStore.push({id,excerpt:pendingNoteExcerpt,text,markEl:mark});
+    renderNotesList();
+  }
+  closeNoteModal();
+  window.getSelection().removeAllRanges();
+  savedRange=null;
+}
+
+function renderNotesList(){
+  const list=document.getElementById('notes-list');
+  if(noteStore.length===0){list.innerHTML='<p style="font-size:13px;color:var(--grey-text);padding:8px;">No notes yet. Select text and click 📝 Note.</p>';return;}
+  list.innerHTML=noteStore.map(n=>`
+    <div class="note-card" id="card-${n.id}">
+      <div class="note-excerpt">"${n.excerpt}"</div>
+      <textarea onchange="updateNote('${n.id}',this.value)">${n.text}</textarea>
+      <button class="note-del" onclick="deleteNote('${n.id}')">✕ Remove</button>
+    </div>`).join('');
+}
+
+function openNoteById(id){
+  toggleNotesPanel(true);
+  setTimeout(()=>{
+    const card=document.getElementById('card-'+id);
+    if(card)card.scrollIntoView({behavior:'smooth',block:'center'});
+  },200);
+}
+
+function updateNote(id,val){
+  const n=noteStore.find(x=>x.id===id);
+  if(n){n.text=val;if(n.markEl)n.markEl.title='📝 '+val;}
+}
+
+function deleteNote(id){
+  const idx=noteStore.findIndex(x=>x.id===id);
+  if(idx>-1){
+    const n=noteStore[idx];
+    if(n.markEl){
+      const p=n.markEl.parentNode;
+      while(n.markEl.firstChild)p.insertBefore(n.markEl.firstChild,n.markEl);
+      p.removeChild(n.markEl);
+    }
+    noteStore.splice(idx,1);
+    renderNotesList();
+  }
+}
+
+function toggleNotesPanel(forceOpen){
+  const panel=document.getElementById('notes-panel');
+  const btn=document.getElementById('notes-toggle-btn');
+  const isOpen=panel.classList.contains('open');
+  if(forceOpen===true||!isOpen){panel.classList.add('open');btn.classList.add('active');}
+  else{panel.classList.remove('open');btn.classList.remove('active');}
+}
+</script>
+</body>
+</html>
